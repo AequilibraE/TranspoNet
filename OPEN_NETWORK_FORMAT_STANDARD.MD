@@ -54,8 +54,19 @@ Network links are defined by geographic elements of type LineString (No MultiLin
 
 ## 1.2	-  Network nodes
 
-...
+*To come*
 
+## 1.3	-  Turn penalties
+
+*To come*
+
+## 1.4	-  Transit routes
+
+*To come*
+
+## 1.5	-  Transit stops
+
+*To come*
 
 # 2  -	Network components consistency
 
@@ -74,12 +85,26 @@ In this section we present the mapping of all meaningful changes that a user can
 
 ### 3.1.1 	-  Node layer changes and expected behavior 
 
-There are 6 possible changes envisioned for the network nodes layer, being 3 of geographic nature and 3 of data-only nature.
+There are 6 possible changes envisioned for the network nodes layer, being 3 of geographic nature and 3 of data-only nature. The possible variations for each change are also discussed, and all the points where alternative behavior is conceivable are also explored.
 
 #### 3.1.1.1	Creating a node
-A node is not to be created if not by the placement of a link (new or moved) at a position where no nodes already exists. If the user tries to create a node, the network should return an error and not perform such operation.
+There are only two situations when a node is to be created:
+- Placement of a link extremity (new or moved) at a position where no node already exists
+- Spliting a link in the middle
+
+In both cases a unique node ID needs to be generated for the new node, and all other node fields should be empty
+An alternative behavior would be to allow the user to create nodes with no attached links. Although this would not result in inconsistent networks for traffic and transit assignments, this behavior would not be considered valid.
+All other edits that result in the creation of un-connected nodes or that result in such case should result in an error that prevents such operation
+
 #### 3.1.1.2	Deleting a node
+Deleting a node is only allowed in two situations:
+- No link is connected to such node (in this case, the deletion of the node should be handled automatically when no link is left connected to such node)
+- When only two links are connected to such node. In this case, those two links will be merged, and a standard operation for computing the value of each field will be applied.
+
+For simplicity, the operations are: Weighted average for all numeric fields, copying the fields from the longest link for all non-numeric fields. Length is to be recomputed in the native distance measure of distance for the projection being used.
+
 A node can only be eliminated as a consequence of all links that terminated/originated at it being eliminated. If the user tries to delete a node, the network should return an error and not perform such operation. 
+
 #### 3.1.1.3	Moving a node
 There are two possibilities for moving a node: Moving to an empty space, and moving on top of another node.
 
