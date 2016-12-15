@@ -72,18 +72,6 @@ The first part of this problem is discussed in the next section of the report, w
 ## 3.1  -  Change behavior
 In this section we present the mapping of all meaningful changes that a user can do to each part of the transportation network, doing so for each element of the transportation network.
 
-
-# 3  -	Implementation
-The implementation of this standard is implemented using SQLite databases for four equally reasons:
-1.	SQLite is open source
-2.	It has a spatial extension, SpatiaLite
-3.	As other databases, the user can implement triggers to ensure data consistency
-4.	Ample support for SQLite/Spatialite editing by GIS packages
-It is true that the network standard per se can be achieved in many forms, including by the generation of regular geographic files (e.g. ShapeFiles, TabFiles, etc.) or text files with a text representation of their geographic features (e.g. Well-Known-Text, WKT). However, ensuring consistency between these elements in the face of their editing has so far not been possible outside proprietary transportation packages, and the present implementation of this standard addresses this issue.
-In order for the implementation of this standard to be successful, it is necessary to map all the possible user-driven changes to the underlying data and the behavior the SQLite database needs to demonstrate in order to maintain consistency of the data. The detailed expected behavior is detailed below.
-As each item in the network is edited, a series of checks and changes to other components are necessary in order to keep the network as a whole consistent. In this section we list all the possible physical (geometrical) changes to each element of the network and what behavior (consequences) we expect from each one of these changes.
-Our implementation, in the form of a SQLite database, will be referred to as network from this point on.
-
 ### 3.1.1 	-  Node layer changes and expected behavior 
 
 There are 6 possible changes envisioned for the network nodes layer, being 3 of geographic nature and 3 of data-only nature.
@@ -93,11 +81,29 @@ A node is not to be created if not by the placement of a link (new or moved) at 
 #### 3.1.1.2	Deleting a node
 A node can only be eliminated as a consequence of all links that terminated/originated at it being eliminated. If the user tries to delete a node, the network should return an error and not perform such operation. 
 #### 3.1.1.3	Moving a node
-There are two possibilities for moving a node: Moving to an empty space, and moving on top of another node. 
+There are two possibilities for moving a node: Moving to an empty space, and moving on top of another node.
+
 -**If a node is moved to an empty space**
 All links originated/ending at that node will have its shape altered to conform to that new node position and keep the network connected. The alteration of the link happens only by changing the Latitude and Longitude of the link extremity associated with that node.
+
 -**If a node is moved on top of another node**
 All the links that connected to the node on the bottom have their extremities switched to the node on top
 The node on the bottom gets eliminated as a consequence of the behavior listed on 3.1.4 and condition listed on 3.1.2
+
+
+## 3.2  -  SQLite implementation
+The implementation of this standard is performed using SQLite databases for five equally important reasons:
+1.	SQLite is open source
+2.	It has a spatial extension, SpatiaLite
+3.	As other databases, the user can implement triggers to ensure data consistency
+4.	Ample support for SQLite/Spatialite editing by GIS packages
+5. Does not require infrastructure like other databases
+
+I
+This implementation choice is not, however, free of caveats. Do to technological limitations of SQLite, some of the desired behaviors identified in **3.1** cannot be implemented in SQLite, but such caveats do not impact the usefulness of this implementation or its robustness in face proper use of the tool
+In order for the implementation of this standard to be successful, it is necessary to map all the possible user-driven changes to the underlying data and the behavior the SQLite database needs to demonstrate in order to maintain consistency of the data. The detailed expected behavior is detailed below.
+As each item in the network is edited, a series of checks and changes to other components are necessary in order to keep the network as a whole consistent. In this section we list all the possible physical (geometrical) changes to each element of the network and what behavior (consequences) we expect from each one of these changes.
+Our implementation, in the form of a SQLite database, will be referred to as network from this point on.
+
 
 
