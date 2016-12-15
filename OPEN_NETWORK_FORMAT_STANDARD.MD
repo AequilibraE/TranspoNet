@@ -79,3 +79,16 @@ Our implementation, in the form of a SQLite database, will be referred to as net
 
 There are 6 possible changes envisioned for the network nodes layer, being 3 of geographic nature and 3 of data-only nature.
 
+### 3.1.1	Creating a node
+A node is not to be created if not by the placement of a link (new or moved) at a position where no nodes already exists. If the user tries to create a node, the network should return an error and not perform such operation.
+### 3.1.2	Deleting a node
+A node can only be eliminated as a consequence of all links that terminated/originated at it being eliminated. If the user tries to delete a node, the network should return an error and not perform such operation. 
+### 3.1.3	Moving a node
+There are two possibilities for moving a node: Moving to an empty space, and moving on top of another node. 
+#### 3.1.3.1	If a node is moved to an empty space:
+All links originated/ending at that node will have its shape altered to conform to that new node position and keep the network connected. The alteration of the link happens only by changing the Latitude and Longitude of the link extremity associated with that node.
+#### 3.1.3.2	If a node is moved on top of another node
+All the links that connected to the node on the bottom have their extremities switched to the node on top
+The node on the bottom gets eliminated as a consequence of the behavior listed on 3.1.4 and condition listed on 3.1.2
+
+
