@@ -108,12 +108,72 @@ A node can only be eliminated as a consequence of all links that terminated/orig
 #### 3.1.1.3	Moving a node
 There are two possibilities for moving a node: Moving to an empty space, and moving on top of another node.
 
--**If a node is moved to an empty space**
+- **If a node is moved to an empty space**
 All links originated/ending at that node will have its shape altered to conform to that new node position and keep the network connected. The alteration of the link happens only by changing the Latitude and Longitude of the link extremity associated with that node.
 
--**If a node is moved on top of another node**
+- **If a node is moved on top of another node**
 All the links that connected to the node on the bottom have their extremities switched to the node on top
 The node on the bottom gets eliminated as a consequence of the behavior listed on 3.1.4 and condition listed on 3.1.2
+
+#### 3.1.1.4	Adding a data field
+No consistency check is needed other than ensuring that no repeated data field names exist
+
+#### 3.1.1.5	Deleting a data field
+If the data field whose attempted deletion is mandatory, the network should return an error and not perform such operation. Otherwise the operation can be performed.
+
+#### 3.1.1.6	Modifying a data entry
+If the field being edited is the node_id field, then all the related tables need to be edited as well (e.g. a_b and b_node in the link layer, the node_id tagged to turn restrictions and to transit stops)
+
+### 3.1.2	Link layer changes and expected behavior 
+There are 8 possible changes envisioned for the network links layer, being 5 of geographic nature and 3 of data-only nature.
+#### 3.1.2.1	Deleting a link
+-	Cannot be deleted if there is a transit route, traffic count, turn penalty, or turn count associated to it.
+-	After deleting the link all
+
+#### 3.1.2.2	Moving a link extremity
+*To come*
+
+#### 3.1.2.3	Re-shaping a link
+*To come*
+
+#### 3.1.2.4	Splitting a link
+*To come*
+
+#### 3.1.2.5	Merging two links
+*To come*
+
+#### 3.1.2.6	Adding data field
+*To come*
+
+#### 3.1.2.7	Deleting data field
+*To come*
+
+#### 3.1.2.8	Changing data
+*To come*
+
+### 3.1.3	Turn penalties layer changes and expected behavior
+*To come*
+
+#### 3.1.3.1	Deleting a turn penalty
+*To come*
+
+#### 3.1.3.2	Adding a turn penalty
+*To come*
+
+#### 3.1.3.3	Deleting data fields
+*To come*
+
+#### 3.1.3.4	Adding data fields
+*To come*
+
+#### 3.1.3.5	Modifying data entries
+*To come*
+
+
+3.4	Public transit routes changes and expected behavior 
+The behavior for changes to this layer
+3.5	Public transit route stops changes and expected behavior 
+
 
 
 ## 3.2  -  SQLite implementation
@@ -131,4 +191,17 @@ As each item in the network is edited, a series of checks and changes to other c
 Our implementation, in the form of a SQLite database, will be referred to as network from this point on.
 
 
+
+# 4	References
+
+http://tfresource.org/Category:Transportation_networks
+
+# 5	Authors
+
+## Pedro Camargo
+www.xl-optim.com
+https://au.linkedin.com/in/pedrocamargo
+
+## Andrew O'Brien
+https://au.linkedin.com/in/andrew-o-brien-5a8bb486
 
