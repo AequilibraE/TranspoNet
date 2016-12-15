@@ -113,7 +113,7 @@ All links originated/ending at that node will have its shape altered to conform 
 
 - **If a node is moved on top of another node**
 All the links that connected to the node on the bottom have their extremities switched to the node on top
-The node on the bottom gets eliminated as a consequence of the behavior listed on 3.1.4 and condition listed on 3.1.2
+The node on the bottom gets eliminated as a consequence of the behavior listed on 3.1.1.2
 
 #### 3.1.1.4	Adding a data field
 No consistency check is needed other than ensuring that no repeated data field names exist
@@ -127,11 +127,23 @@ If the field being edited is the node_id field, then all the related tables need
 ### 3.1.2	Link layer changes and expected behavior 
 There are 8 possible changes envisioned for the network links layer, being 5 of geographic nature and 3 of data-only nature.
 #### 3.1.2.1	Deleting a link
--	Cannot be deleted if there is a transit route, traffic count, turn penalty, or turn count associated to it.
--	After deleting the link all
+A link cannot be deleted if there are other elements associated with it. These elements are:
+
+-	Transit routes
+- turn penalties
+
+In case a link is deleted, it is necessary to check for orfan nodes, and deal with them as prescribed in **3.1.1.2**
 
 #### 3.1.2.2	Moving a link extremity
-*To come*
+This change can happen in two different forms:
+
+- **The link extremity is moved to an empty space**
+
+In this case, a new node needs to be created, according to the behavior described in **3.1.1.1** . The information of node ID (A or B node, depending on the extremety) needs to be updated according to the ID for the new node created.
+
+- **The link extremity is moved from one node to another**
+
+The information of node ID (A or B node, depending on the extremety) needs to be updated according to the ID for the node the link now terminates in.
 
 #### 3.1.2.3	Re-shaping a link
 *To come*
