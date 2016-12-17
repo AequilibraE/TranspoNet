@@ -1,3 +1,6 @@
+-- TODO: allow arbitrary CRS
+-- TODO: allow arbitrary column and table names
+
 -- basic network setup
 -- alternatively use ogr2ogr
 -- note that sqlite only recognises 5 basic column affinities (TEXT, NUMERIC, INTEGER, REAL, BLOB); more specific declarations are ignored
@@ -54,6 +57,16 @@ create trigger update_ab_nodes after update of geometry on links
           search_frame = PointN(links.geometry,NumPoints(links.geometry))) or
         nodes.node_id = new.b_node))
     where links.rowid = new.rowid;
+    -- now delete nodes which no-longer have attached links
+    delete from nodes
+    where node_id not in (
+      select a_node
+      from links
+      where a_node is not null
+      union
+      select b_node
+      from links
+      where b_node is not null);
   end;
 
 create trigger insert_ab_nodes after insert on links
@@ -81,9 +94,16 @@ create trigger insert_ab_nodes after insert on links
   end;
 
 -- delete lonely node after link deleted
--- todo
-
--- prevent deletion of mandatory fields not possible with sqlite: no trigger before alter table
+create trigger deleted_link after delete on links
+  begin
+    delete from nodes
+    where node_id not in (
+      select a_node
+      from links
+      union
+      select b_node
+      from links);
+    end;
 
 -- when moving or creating a link, don't allow it to duplicate an existing link.
 
@@ -132,9 +152,9 @@ create trigger no_duplicate_node before insert on nodes
     -- todo: change this to perform a cannibalisation instead.
     select raise(ABORT, 'Cannot drop on-top of other node');
   end;
+-- TODO: cannot create node not attached.
 
 -- don't delete a node, unless no attached links
--- todo: consider moving the when clause before begin.
 create trigger dont_delete_node before delete on nodes
   when (select count(*) from links where a_node = old.node_id or b_node = old.node_id) > 0
   begin
@@ -147,20 +167,3 @@ create trigger dont_delete_node before delete on nodes
 
 -- when editing node_id, update connected links
 
-
--- when deleting a node, set attached links' a/b_node to nil
--- Note: this behaviour not preferred; prevent delete instead.
-/*
-create trigger delete_a_links after delete on nodes
-  begin
-    update links
-    set a_node = null
-    where links.a_node = old.node_id;
-  end;
-create trigger delete_b_links after delete on nodes
-  begin
-    update links
-    set b_node = null
-    where links.b_node = old.node_id;
-  end;
-*/
