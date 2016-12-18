@@ -55,7 +55,7 @@ CREATE TRIGGER new_link_a_node BEFORE INSERT ON links
       nodes.node_id = new.a_node)) = 0
   BEGIN
     INSERT INTO nodes (node_id, geometry)
-    VALUES ((SELECT max(node_id) + 1 from nodes),
+    VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             StartPoint(new.geometry));
   END;
 CREATE TRIGGER new_link_b_node BEFORE INSERT ON links
@@ -69,7 +69,7 @@ CREATE TRIGGER new_link_b_node BEFORE INSERT ON links
       nodes.node_id = new.b_node)) = 0
   BEGIN
     INSERT INTO nodes (node_id, geometry)
-    VALUES ((SELECT max(node_id) + 1 from nodes),
+    VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             EndPoint(new.geometry));
   END;
   
@@ -86,7 +86,7 @@ CREATE TRIGGER update_link_a_node BEFORE UPDATE OF geometry ON links
       nodes.node_id = new.a_node)) = 0
   BEGIN
     INSERT INTO nodes (node_id, geometry)
-    VALUES ((SELECT max(node_id) + 1 from nodes),
+    VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             StartPoint(new.geometry));
   END;
 CREATE TRIGGER update_link_b_node BEFORE UPDATE OF geometry ON links
@@ -100,7 +100,7 @@ CREATE TRIGGER update_link_b_node BEFORE UPDATE OF geometry ON links
       nodes.node_id = new.b_node)) = 0
   BEGIN
     INSERT INTO nodes (node_id, geometry)
-    VALUES ((SELECT max(node_id) + 1 from nodes),
+    VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             EndPoint(new.geometry));
   END;
 
