@@ -52,25 +52,29 @@ CREATE TRIGGER updated_link_geometry AFTER UPDATE OF geometry ON links
       SELECT node_id
       FROM nodes
       WHERE nodes.geometry = PointN(new.geometry,1) AND
-      (nodes.rowid IN (
-          SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+      (nodes.ROWID IN (
+          SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
           search_frame = PointN(new.geometry,1)) OR
         nodes.node_id = new.a_node))
-    WHERE links.rowid = new.rowid;
+    WHERE links.ROWID = new.ROWID;
     UPDATE links
     SET b_node = (
       SELECT node_id
       FROM nodes
       WHERE nodes.geometry = PointN(links.geometry,NumPoints(links.geometry)) AND
-      (nodes.rowid IN (
-          SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+      (nodes.ROWID IN (
+          SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
           search_frame = PointN(links.geometry,NumPoints(links.geometry))) OR
         nodes.node_id = new.b_node))
-    WHERE links.rowid = new.rowid;
+    WHERE links.ROWID = new.ROWID;
     
     -- now delete nodes which no-longer have attached links
+    -- limit search to nodes which were attached to this link.
     DELETE FROM nodes
-    WHERE node_id NOT IN (
+    WHERE (node_id = old.a_node OR node_id = old.b_node)
+    AND NOT (geometry = PointN(new.geometry,NumPoints(new.geometry)) OR
+             geometry = PointN(new.geometry,1))
+    AND node_id not in (    
       SELECT a_node
       FROM links
       WHERE a_node is NOT NULL
@@ -80,29 +84,91 @@ CREATE TRIGGER updated_link_geometry AFTER UPDATE OF geometry ON links
       WHERE b_node is NOT NULL);
   END;
 
+-- we use a before ordering here, as it is the only way to guarantee this will run before the nodeid update trigger.
+CREATE TRIGGER new_link_a_node BEFORE INSERT ON links
+  WHEN
+    (SELECT count(*)
+    FROM nodes
+    WHERE nodes.geometry = PointN(new.geometry,1) AND
+    (nodes.ROWID IN (
+        SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+        search_frame = PointN(new.geometry,1)) OR
+      nodes.node_id = new.a_node)) = 0
+  BEGIN
+    INSERT INTO nodes (node_id, geometry)
+    VALUES ((SELECT max(node_id) + 1 from nodes),
+            PointN(new.geometry,1));
+  END;
+  
+CREATE TRIGGER new_link_b_node BEFORE INSERT ON links
+  WHEN
+    (SELECT count(*)
+    FROM nodes
+    WHERE nodes.geometry = PointN(new.geometry,NumPoints(new.geometry)) AND
+    (nodes.ROWID IN (
+        SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+        search_frame = PointN(new.geometry,NumPoints(new.geometry))) OR
+      nodes.node_id = new.a_node)) = 0
+  BEGIN
+    INSERT INTO nodes (node_id, geometry)
+    VALUES ((SELECT max(node_id) + 1 from nodes),
+            PointN(new.geometry,NumPoints(new.geometry)));
+  END;
+  
+-- we use a before ordering here, as it is the only way to guarantee this will run before the nodeid update trigger.
+CREATE TRIGGER update_link_a_node BEFORE UPDATE OF geometry ON links
+  WHEN
+    (SELECT count(*)
+    FROM nodes
+    WHERE nodes.geometry = PointN(new.geometry,1) AND
+    (nodes.ROWID IN (
+        SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+        search_frame = PointN(new.geometry,1)) OR
+      nodes.node_id = new.a_node)) = 0
+  BEGIN
+    INSERT INTO nodes (node_id, geometry)
+    VALUES ((SELECT max(node_id) + 1 from nodes),
+            PointN(new.geometry,1));
+  END;
+  
+CREATE TRIGGER update_link_b_node BEFORE UPDATE OF geometry ON links
+  WHEN
+    (SELECT count(*)
+    FROM nodes
+    WHERE nodes.geometry = PointN(new.geometry,NumPoints(new.geometry)) AND
+    (nodes.ROWID IN (
+        SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+        search_frame = PointN(new.geometry,NumPoints(new.geometry))) OR
+      nodes.node_id = new.a_node)) = 0
+  BEGIN
+    INSERT INTO nodes (node_id, geometry)
+    VALUES ((SELECT max(node_id) + 1 from nodes),
+            PointN(new.geometry,NumPoints(new.geometry)));
+  END;
+ 
 CREATE TRIGGER new_link AFTER INSERT ON links
   BEGIN
-  -- Update a/b_node AFTER creating a link.
+    -- Update a/b_node AFTER creating a link.
     UPDATE links
     SET a_node = (
       SELECT node_id
       FROM nodes
       WHERE nodes.geometry = PointN(new.geometry,1) AND
-      (nodes.rowid IN (
-          SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+      (nodes.ROWID IN (
+          SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
           search_frame = PointN(new.geometry,1)) OR
         nodes.node_id = new.a_node))
-    WHERE links.rowid = new.rowid;
+    WHERE links.ROWID = new.ROWID;
     UPDATE links
     SET b_node = (
       SELECT node_id
       FROM nodes
       WHERE nodes.geometry = PointN(links.geometry,NumPoints(links.geometry)) AND
-      (nodes.rowid IN (
-          SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+      (nodes.ROWID IN (
+          SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
           search_frame = PointN(links.geometry,NumPoints(links.geometry))) OR
         nodes.node_id = new.b_node))
-    WHERE links.rowid = new.rowid;
+    WHERE links.ROWID = new.ROWID;
   END;
 
 -- delete lonely node AFTER link deleted
@@ -143,8 +209,8 @@ CREATE TRIGGER cannibalise_node BEFORE UPDATE OF geometry ON nodes
     FROM nodes
     WHERE nodes.node_id != new.node_id
     AND nodes.geometry = new.geometry AND
-    nodes.rowid IN (
-      SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+    nodes.ROWID IN (
+      SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
       search_frame = new.geometry)) > 0
   BEGIN
     -- todo: change this to perform a cannibalisation instead.
@@ -158,12 +224,12 @@ CREATE TRIGGER no_duplicate_node BEFORE INSERT ON nodes
     FROM nodes
     WHERE nodes.node_id != new.node_id
     AND nodes.geometry = new.geometry AND
-    nodes.rowid IN (
-      SELECT rowid FROM SpatialIndex WHERE f_table_name = 'nodes' AND
+    nodes.ROWID IN (
+      SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
       search_frame = new.geometry)) > 0
   BEGIN
     -- todo: change this to perform a cannibalisation instead.
-    SELECT raise(ABORT, 'Cannot drop on-top of other node');
+    SELECT raise(ABORT, 'Cannot create on-top of other node');
   END;
 
 -- TODO: cannot CREATE node NOT attached.
