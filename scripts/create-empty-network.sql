@@ -25,6 +25,8 @@ CREATE TABLE 'links' (
 );
 SELECT AddGeometryColumn( 'links', 'geometry', 4326, 'LINESTRING', 'XY' );
 SELECT CreateSpatialIndex( 'links' , 'geometry' );
+CREATE INDEX links_a_node_idx ON links (a_node);
+CREATE INDEX links_b_node_idx ON links (b_node);
 
 -- it is recommended to use the listed edit widgets in QGIS
 CREATE TABLE 'nodes' (
