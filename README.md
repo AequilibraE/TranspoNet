@@ -192,10 +192,15 @@ The behavior for changes to this layer
 
 ## 3.2  -  SQLite implementation
 The implementation of this standard is performed using SQLite databases for five equally important reasons:
+
 1.	SQLite is open source
+
 2.	It has a spatial extension, SpatiaLite
+
 3.	As other databases, the user can implement triggers to ensure data consistency
+
 4.	Ample support for SQLite/Spatialite editing by GIS packages
+
 5. Does not require infrastructure like other databases
 
 I
@@ -207,7 +212,6 @@ Our implementation, in the form of a SQLite database, will be referred to as net
 
 
 # 4	References
-
 http://tfresource.org/Category:Transportation_networks
 
 # 5	Authors
