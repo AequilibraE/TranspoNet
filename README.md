@@ -223,9 +223,9 @@ http://tfresource.org/Category:Transportation_networks
 # 5	Authors
 
 ## Pedro Camargo
-www.xl-optim.com
-https://au.linkedin.com/in/pedrocamargo
+- www.xl-optim.com
+- https://au.linkedin.com/in/pedrocamargo
 
 ## Andrew O'Brien
-https://au.linkedin.com/in/andrew-o-brien-5a8bb486
+- https://au.linkedin.com/in/andrew-o-brien-5a8bb486
 
