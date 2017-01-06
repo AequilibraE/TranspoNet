@@ -24,6 +24,7 @@ Other elements that are not part of the network model, but are closely associate
 -	Traffic analysis zones
 -	Traffic counts
 -	Turn counts
+
 Each one of these network components is defined by a database table composed of some mandatory and optional fields and, in most cases, by the existence of a geometric dimension associated to each entry in such database, configuring a GIS enabled data source. In turn, the requirements are derived from transportation model requirements, and are detailed next.
 
 ## 1.1	-  Network links
