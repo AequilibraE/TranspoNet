@@ -9,10 +9,15 @@ The third and last section discusses the implementation of this standard in one 
 # 1  -	Transportation network components
 
 Transportation networks are usually composed by a number of elements that that are either represented as lines (e.g. streets) or points (e.g. intersections). Although the actual composition of each particular network model varies across a large range of possibilities, this standard covers those network models that can be defined by a combination of the following 5 different elements:
+
 1.	Network links
+
 2.	Network nodes
+
 3.	Turn penalties/restrictions
+
 4.	Transit routes
+
 5.	Transit stops
 
 Other elements that are not part of the network model, but are closely associated with it, will be considered in this standard. Namely:
