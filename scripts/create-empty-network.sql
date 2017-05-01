@@ -11,7 +11,8 @@
 -- ogc_fid alone, and have a separate link_id and node_id, for network editors who have specific
 -- requirements.
 
--- it is recommended to use the listed edit widgets in QGIS
+-- it is recommended to use the listed edit widgets in QGIS;
+#
 CREATE TABLE 'links' (
   ogc_fid INTEGER PRIMARY KEY, -- Hidden widget
   link_id INTEGER UNIQUE NOT NULL, -- Text edit widget with 'Not null' constraint
@@ -21,21 +22,33 @@ CREATE TABLE 'links' (
   capacity_ab REAL,
   capacity_ba REAL,
   speed_ab REAL,
-  speed_ba REAL
+  speed_ba REAL,
+  'length' REAL
 );
+#
+SELECT InitSpatialMetaData();
+#
 SELECT AddGeometryColumn( 'links', 'geometry', 4326, 'LINESTRING', 'XY' );
+#
 SELECT CreateSpatialIndex( 'links' , 'geometry' );
+#
 CREATE INDEX links_a_node_idx ON links (a_node);
+#
 CREATE INDEX links_b_node_idx ON links (b_node);
-
+#
 -- it is recommended to use the listed edit widgets in QGIS
+#
 CREATE TABLE 'nodes' (
   ogc_fid INTEGER PRIMARY KEY, -- Hidden widget
   node_id INTEGER UNIQUE NOT NULL -- Text edit widget with 'Not null' constraint
 );
+#
+SELECT InitSpatialMetaData();
+#
 SELECT AddGeometryColumn( 'nodes', 'geometry', 4326, 'POINT', 'XY' );
+#
 SELECT CreateSpatialIndex( 'nodes' , 'geometry' );
-
+#
 
 --
 -- Triggers are grouped by the table which triggers their execution
@@ -46,6 +59,7 @@ SELECT CreateSpatialIndex( 'nodes' , 'geometry' );
 
 -- we use a before ordering here, as it is the only way to guarantee this will run before the nodeid update trigger.
 -- when inserting a link endpoint to empty space, create a new node
+#
 CREATE TRIGGER new_link_a_node BEFORE INSERT ON links
   WHEN
     (SELECT count(*)
@@ -60,6 +74,7 @@ CREATE TRIGGER new_link_a_node BEFORE INSERT ON links
     VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             StartPoint(new.geometry));
   END;
+#
 CREATE TRIGGER new_link_b_node BEFORE INSERT ON links
   WHEN
     (SELECT count(*)
@@ -74,7 +89,7 @@ CREATE TRIGGER new_link_b_node BEFORE INSERT ON links
     VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             EndPoint(new.geometry));
   END;
-  
+#
 -- we use a before ordering here, as it is the only way to guarantee this will run before the nodeid update trigger.
 -- when inserting a link endpoint to empty space, create a new node
 CREATE TRIGGER update_link_a_node BEFORE UPDATE OF geometry ON links
@@ -91,6 +106,7 @@ CREATE TRIGGER update_link_a_node BEFORE UPDATE OF geometry ON links
     VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             StartPoint(new.geometry));
   END;
+#
 CREATE TRIGGER update_link_b_node BEFORE UPDATE OF geometry ON links
   WHEN
     (SELECT count(*)
@@ -105,7 +121,7 @@ CREATE TRIGGER update_link_b_node BEFORE UPDATE OF geometry ON links
     VALUES ((SELECT coalesce(max(node_id) + 1,1) from nodes),
             EndPoint(new.geometry));
   END;
-
+#
   
 CREATE TRIGGER new_link AFTER INSERT ON links
   BEGIN
@@ -131,7 +147,7 @@ CREATE TRIGGER new_link AFTER INSERT ON links
         nodes.node_id = new.b_node))
     WHERE links.ROWID = new.ROWID;
   END;
-
+#
 CREATE TRIGGER updated_link_geometry AFTER UPDATE OF geometry ON links
   BEGIN
   -- Update a/b_node AFTER moving a link.
@@ -173,6 +189,7 @@ CREATE TRIGGER updated_link_geometry AFTER UPDATE OF geometry ON links
       FROM links
       WHERE b_node is NOT NULL);
   END;
+#
 
 -- delete lonely node AFTER link deleted
 CREATE TRIGGER deleted_link AFTER delete ON links
@@ -185,7 +202,7 @@ CREATE TRIGGER deleted_link AFTER delete ON links
       SELECT b_node
       FROM links);
     END;
-
+#
 -- when moving OR creating a link, don't allow it to duplicate an existing link.
 -- TODO
 
@@ -204,7 +221,7 @@ CREATE TRIGGER update_node_geometry AFTER UPDATE OF geometry ON nodes
     WHERE b_node = new.node_id
     AND EndPoint(geometry) != new.geometry;
   END;
-  
+#
 -- when you move a node on top of another node, steal all links FROM that node, AND delete it.
 -- be careful of merging the a_nodes of attached links to the new node
 -- this may be better as a TRIGGER on links?
@@ -247,7 +264,7 @@ CREATE TRIGGER cannibalise_node BEFORE UPDATE OF geometry ON nodes
       SELECT ROWID FROM SpatialIndex WHERE f_table_name = 'nodes' AND
       search_frame = new.geometry);
   END;
-    
+#
 -- you may NOT CREATE a node on top of another node.
 CREATE TRIGGER no_duplicate_node BEFORE INSERT ON nodes
   WHEN
@@ -262,7 +279,7 @@ CREATE TRIGGER no_duplicate_node BEFORE INSERT ON nodes
     -- todo: change this to perform a cannibalisation instead.
     SELECT raise(ABORT, 'Cannot create on-top of other node');
   END;
-
+#
 -- TODO: cannot CREATE node NOT attached.
 
 -- don't delete a node, unless no attached links
@@ -271,7 +288,7 @@ CREATE TRIGGER dont_delete_node BEFORE DELETE ON nodes
   BEGIN
     SELECT raise(ABORT, 'Node cannot be deleted, it still has attached links.');
   END;
-  
+#
 -- don't CREATE a node, unless on a link endpoint
 -- TODO
 -- CREATE BEFORE WHERE spatial index AND PointN()
@@ -284,3 +301,4 @@ CREATE TRIGGER updated_node_id AFTER UPDATE OF node_id ON nodes
     UPDATE links SET b_node = new.node_id
     WHERE links.b_node = old.node_id;
   END;
+#
